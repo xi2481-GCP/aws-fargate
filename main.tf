@@ -5,14 +5,14 @@ provider "aws" {
 data "aws_availability_zones" "available" {}
 
 locals {
-  region = "eu-west-1"
+  region = "us-east-1"
   name   = "ex-${basename(path.cwd)}"
 
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  container_name = "ecsdemo-frontend"
-  container_port = 3000
+  container_name = "Testing-fargate"
+  container_port = 80
 
   tags = {
     Name       = local.name
@@ -64,23 +64,23 @@ module "ecs_service" {
   # Container definition(s)
   container_definitions = {
 
-    fluent-bit = {
-      cpu       = 512
-      memory    = 1024
-      essential = true
-      image     = nonsensitive(data.aws_ssm_parameter.fluentbit.value)
-      firelens_configuration = {
-        type = "fluentbit"
-      }
-      memory_reservation = 50
-      user               = "0"
-    }
+    # fluent-bit = {
+    #   cpu       = 512
+    #   memory    = 1024
+    #   essential = true
+    #   image     = nonsensitive(data.aws_ssm_parameter.fluentbit.value)
+    #   firelens_configuration = {
+    #     type = "fluentbit"
+    #   }
+    #   memory_reservation = 50
+    #   user               = "0"
+    # }
 
     (local.container_name) = {
       cpu       = 512
       memory    = 1024
       essential = true
-      image     = "public.ecr.aws/aws-containers/ecsdemo-frontend:776fd50"
+      image     = "575999041771.dkr.ecr.us-east-1.amazonaws.com/test:latest"
       port_mappings = [
         {
           name          = local.container_name
@@ -93,21 +93,21 @@ module "ecs_service" {
       # Example image used requires access to write to root filesystem
       readonly_root_filesystem = false
 
-      dependencies = [{
-        containerName = "fluent-bit"
-        condition     = "START"
-      }]
+      # dependencies = [{
+      #   containerName = "fluent-bit"
+      #   condition     = "START"
+      # }]
 
-      enable_cloudwatch_logging = false
-      log_configuration = {
-        logDriver = "awsfirelens"
-        options = {
-          Name                    = "firehose"
-          region                  = local.region
-          delivery_stream         = "my-stream"
-          log-driver-buffer-limit = "2097152"
-        }
-      }
+      # enable_cloudwatch_logging = false
+      # log_configuration = {
+      #   logDriver = "awsfirelens"
+      #   options = {
+      #     Name                    = "firehose"
+      #     region                  = local.region
+      #     delivery_stream         = "my-stream"
+      #     log-driver-buffer-limit = "2097152"
+      #   }
+      # }
       memory_reservation = 100
     }
   }
@@ -158,9 +158,9 @@ module "ecs_service" {
 # Supporting Resources
 ################################################################################
 
-data "aws_ssm_parameter" "fluentbit" {
-  name = "/aws/service/aws-for-fluent-bit/stable"
-}
+# data "aws_ssm_parameter" "fluentbit" {
+#   name = "/aws/service/aws-for-fluent-bit/stable"
+# }
 
 resource "aws_service_discovery_http_namespace" "this" {
   name        = local.name
