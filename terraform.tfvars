@@ -1,0 +1,1 @@
+image_uri="808715363114.dkr.ecr.us-east-1.amazonaws.com/testnnk12"
